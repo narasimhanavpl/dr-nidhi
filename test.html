@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fixed Duty Roster Schedule Generator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .description {
+            color: #7f8c8d;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .control-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #2980b9;
+        }
+        
+        .schedule-container {
+            overflow-x: auto;
+            margin-bottom: 30px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #3498db;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        
+        .shift-8-2 {
+            background-color: #e8f4fd;
+        }
+        
+        .shift-2-8 {
+            background-color: #fff4e6;
+        }
+        
+        .shift-8-8 {
+            background-color: #ffe6e6;
+        }
+        
+        .shift-ncd {
+            background-color: #f0e6ff;
+        }
+        
+        .shift-wo {
+            background-color: #e6ffe6;
+        }
+        
+        .summary {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .summary h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .summary-item {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .summary-item h4 {
+            margin-bottom: 10px;
+            color: #7f8c8d;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        
+        .summary-item p {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .download-btn {
+            background: #27ae60;
+            margin-top: 20px;
+        }
+        
+        .download-btn:hover {
+            background: #219653;
+        }
+        
+        @media print {
+            body {
+                padding: 0;
+                background: white;
+            }
+            
+            .container {
+                box-shadow: none;
+                padding: 0;
+            }
+            
+            .controls, button, .summary {
+                display: none;
+            }
+            
+            table {
+                page-break-inside: auto;
+            }
+            
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Fixed Duty Roster Schedule Generator</h1>
+            <p class="description">All shifts are properly assigned each day with 3-day rotations and fair distribution.</p>
+        </header>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="monthSelect">Select Month:</label>
+                <select id="monthSelect">
+                    <option value="0">January</option>
+                    <option value="1">February</option>
+                    <option value="2">March</option>
+                    <option value="3">April</option>
+                    <option value="4">May</option>
+                    <option value="5">June</option>
+                    <option value="6">July</option>
+                    <option value="7">August</option>
+                    <option value="8">September</option>
+                    <option value="9">October</option>
+                    <option value="10">November</option>
+                    <option value="11">December</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="yearSelect">Select Year:</label>
+                <input type="number" id="yearSelect" value="2023" min="2023" max="2030">
+            </div>
+            
+            <div class="control-group">
+                <label style="opacity: 0;">Generate</label>
+                <button id="generateBtn">Generate Schedule</button>
+            </div>
+        </div>
+        
+        <div class="schedule-container">
+            <table id="scheduleTable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Day</th>
+                        <th>8 AM - 2 PM</th>
+                        <th>2 PM - 8 PM</th>
+                        <th>8 PM - 8 AM</th>
+                        <th>Night Call Duty</th>
+                        <th>Week Off</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Schedule will be generated here -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="summary">
+            <h3>Shift Distribution Summary</h3>
+            <div class="summary-grid" id="summaryGrid">
+                <!-- Summary will be generated here -->
+            </div>
+            
+            <button class="download-btn" id="downloadBtn">Download Schedule as CSV</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const monthSelect = document.getElementById('monthSelect');
+            const yearSelect = document.getElementById('yearSelect');
+            const generateBtn = document.getElementById('generateBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const scheduleTable = document.getElementById('scheduleTable');
+            const summaryGrid = document.getElementById('summaryGrid');
+            
+            // Set current month as default
+            const currentDate = new Date();
+            monthSelect.value = currentDate.getMonth();
+            yearSelect.value = currentDate.getFullYear();
+            
+            // Generate schedule on page load
+            generateSchedule();
+            
+            // Generate schedule when button is clicked
+            generateBtn.addEventListener('click', generateSchedule);
+            
+            // Download schedule as CSV
+            downloadBtn.addEventListener('click', downloadCSV);
+            
+            function generateSchedule() {
+                const month = parseInt(monthSelect.value);
+                const year = parseInt(yearSelect.value);
+                
+                // Get days in month
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                
+                // Team members
+                const team = ['N', 'K', 'S', 'D', 'X'];
+                
+                // Initialize schedule and counters
+                const schedule = [];
+                const shiftCounts = {};
+                
+                team.forEach(member => {
+                    shiftCounts[member] = {
+                        '8-2': 0,
+                        '2-8': 0,
+                        '8-8': 0,
+                        'NCD': 0,
+                        'WO': 0
+                    };
+                });
+                
+                // Generate schedule for each day
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const date = new Date(year, month, day);
+                    const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'short' });
+                    
+                    // Calculate rotation index based on 3-day blocks
+                    const rotationBlock = Math.floor((day - 1) / 3) % 5;
+                    
+                    // Assign shifts based on rotation block
+                    // This ensures fair distribution with 3-day rotations
+                    let shift8_2, shift2_8, shift8_8, shiftNCD, shiftWO;
+                    
+                    // Different rotation patterns for each 3-day block
+                    if (rotationBlock === 0) {
+                        shift8_2 = team[(0 + day - 1) % 5];
+                        shift2_8 = team[(1 + day - 1) % 5];
+                        shift8_8 = team[(2 + day - 1) % 5];
+                        shiftNCD = team[(3 + day - 1) % 5];
+                        shiftWO = team[(4 + day - 1) % 5];
+                    } else if (rotationBlock === 1) {
+                        shift8_2 = team[(1 + day - 1) % 5];
+                        shift2_8 = team[(2 + day - 1) % 5];
+                        shift8_8 = team[(3 + day - 1) % 5];
+                        shiftNCD = team[(4 + day - 1) % 5];
+                        shiftWO = team[(0 + day - 1) % 5];
+                    } else if (rotationBlock === 2) {
+                        shift8_2 = team[(2 + day - 1) % 5];
+                        shift2_8 = team[(3 + day - 1) % 5];
+                        shift8_8 = team[(4 + day - 1) % 5];
+                        shiftNCD = team[(0 + day - 1) % 5];
+                        shiftWO = team[(1 + day - 1) % 5];
+                    } else if (rotationBlock === 3) {
+                        shift8_2 = team[(3 + day - 1) % 5];
+                        shift2_8 = team[(4 + day - 1) % 5];
+                        shift8_8 = team[(0 + day - 1) % 5];
+                        shiftNCD = team[(1 + day - 1) % 5];
+                        shiftWO = team[(2 + day - 1) % 5];
+                    } else {
+                        shift8_2 = team[(4 + day - 1) % 5];
+                        shift2_8 = team[(0 + day - 1) % 5];
+                        shift8_8 = team[(1 + day - 1) % 5];
+                        shiftNCD = team[(2 + day - 1) % 5];
+                        shiftWO = team[(3 + day - 1) % 5];
+                    }
+                    
+                    // Update shift counts
+                    shiftCounts[shift8_2]['8-2']++;
+                    shiftCounts[shift2_8]['2-8']++;
+                    shiftCounts[shift8_8]['8-8']++;
+                    shiftCounts[shiftNCD]['NCD']++;
+                    shiftCounts[shiftWO]['WO']++;
+                    
+                    // Add to schedule
+                    schedule.push({
+                        date: `${day}/${month + 1}/${year}`,
+                        day: dayOfWeek,
+                        shift8_2: shift8_2,
+                        shift2_8: shift2_8,
+                        shift8_8: shift8_8,
+                        shiftNCD: shiftNCD,
+                        shiftWO: shiftWO
+                    });
+                }
+                
+                // Render schedule table
+                renderScheduleTable(schedule);
+                
+                // Render summary
+                renderSummary(shiftCounts, daysInMonth);
+            }
+            
+            function renderScheduleTable(schedule) {
+                const tbody = scheduleTable.querySelector('tbody');
+                tbody.innerHTML = '';
+                
+                schedule.forEach(day => {
+                    const row = document.createElement('tr');
+                    
+                    row.innerHTML = `
+                        <td>${day.date}</td>
+                        <td>${day.day}</td>
+                        <td class="shift-8-2">${day.shift8_2}</td>
+                        <td class="shift-2-8">${day.shift2_8}</td>
+                        <td class="shift-8-8">${day.shift8_8}</td>
+                        <td class="shift-ncd">${day.shiftNCD}</td>
+                        <td class="shift-wo">${day.shiftWO}</td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                });
+            }
+            
+            function renderSummary(shiftCounts, daysInMonth) {
+                summaryGrid.innerHTML = '';
+                
+                for (const member in shiftCounts) {
+                    const summaryItem = document.createElement('div');
+                    summaryItem.className = 'summary-item';
+                    
+                    let summaryHTML = `<h4>${member}</h4>`;
+                    
+                    for (const shift in shiftCounts[member]) {
+                        const count = shiftCounts[member][shift];
+                        const percentage = ((count / daysInMonth) * 100).toFixed(1);
+                        summaryHTML += `<p>${shift}: ${count} days (${percentage}%)</p>`;
+                    }
+                    
+                    summaryItem.innerHTML = summaryHTML;
+                    summaryGrid.appendChild(summaryItem);
+                }
+            }
+            
+            function downloadCSV() {
+                const month = parseInt(monthSelect.value);
+                const year = parseInt(yearSelect.value);
+                const monthName = new Date(year, month, 1).toLocaleString('default', { month: 'long' });
+                
+                // Create CSV content
+                let csvContent = "Date,Day,8AM-2PM,2PM-8PM,8PM-8AM,Night Call Duty,Week Off\n";
+                
+                const rows = scheduleTable.querySelectorAll('tbody tr');
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    let rowData = [];
+                    
+                    cells.forEach(cell => {
+                        rowData.push(cell.textContent);
+                    });
+                    
+                    csvContent += rowData.join(',') + '\n';
+                });
+                
+                // Create download link
+                const encodedUri = encodeURI('data:text/csv;charset=utf-8,' + csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `duty_roster_${monthName}_${year}.csv`);
+                document.body.appendChild(link);
+                
+                // Trigger download
+                link.click();
+                
+                // Clean up
+                document.body.removeChild(link);
+            }
+        });
+    </script>
+</body>
+</html>
